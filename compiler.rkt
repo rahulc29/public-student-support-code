@@ -50,18 +50,37 @@
   (match p
     [(Program info e) (Program info (pe-exp e))]))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; HW1 Passes
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Utility Functions ;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (env-entry? env key)
+  (dict-has-key? env key))
+
+(define (env-apply env key)
+  (dict-ref env key))
+
+(define (env-set env key val)
+  (dict-set env key val))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Homework Exercises ;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (uniquify-exp env)
   (lambda (e)
     (match e
       [(Var x)
-       (error "TODO: code goes here (uniquify-exp, symbol?)")]
+       (if (env-entry? env x)
+           (Var (env-apply env x))
+           (Var (gensym)))]
       [(Int n) (Int n)]
       [(Let x e body)
-       (error "TODO: code goes here (uniquify-exp, let)")]
+       (define new-name (gensym))
+       (define new-env (env-set env x new-name))
+       (define uniquifier (uniquify-exp new-env))
+       (define new-body (uniquifier body))
+       (Let new-name (uniquifier e) new-body)]
       [(Prim op es)
        (Prim op (for/list ([e es]) ((uniquify-exp env) e)))])))
 
